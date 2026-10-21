@@ -1,0 +1,46 @@
+[Unit]
+Description=MCP ask bridge: a remote agent asks the local Hermes Agent short questions
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/bridges/ask-bridge
+
+# The isolation gate must run with the interpreter of the environment that has
+# Hermes installed, NOT the bridge's own venv. Adjust the interpreter path.
+# A failure here refuses to start the bridge, which is the intent.
+ExecStartPre=/path/to/hermes-env/bin/python %h/bridges/ask-bridge/verify_isolation.py
+
+ExecStart=%h/bridges/ask-bridge/.venv/bin/python %h/bridges/ask-bridge/server.py \
+    --port 8646 --key-file %h/bridges/ask-bridge/bearer.key
+
+Restart=on-failure
+RestartSec=5
+Environment=PYTHONDONTWRITEBYTECODE=1
+
+# ---------------------------------------------------------------------------
+# Deployment values live here, never in the source.
+# Note: systemd strips nested double quotes, so use the Name=Value;Name2=Value2
+# form for BRIDGE_MEMORY_HEADERS rather than JSON.
+# ---------------------------------------------------------------------------
+# Environment=BRIDGE_TOOL_NAME=ask_agent
+# Environment=BRIDGE_SERVER_NAME=ask-bridge
+# Environment=BRIDGE_HERMES_BIN=/usr/local/bin/hermes
+# Environment=BRIDGE_TOOLSETS=search,session_search
+# Environment=BRIDGE_KEY_FILE=%h/bridges/ask-bridge/bearer.key
+# Environment=BRIDGE_LEDGER_PATH=%h/bridges/ask-bridge/bridge-ledger.md
+# Leave the next two unset to inherit the local Hermes model configuration.
+# Environment=BRIDGE_MODEL=<provider>/<model>
+# Environment=BRIDGE_PROVIDER=<provider>
+# Optional memory lookup:
+# Environment=BRIDGE_MEMORY_URL=http://127.0.0.1:1933/api/v1/search/find
+# Environment=BRIDGE_MEMORY_HEADERS=X-Account=hermes;X-User=default;X-Agent=agent
+# Environment=BRIDGE_ASK_LIMIT_PER_HOUR=30
+# Environment=BRIDGE_RUNNER_TIMEOUT=120
+
+NoNewPrivileges=true
+PrivateDevices=true
+
+[Install]
+WantedBy=default.target

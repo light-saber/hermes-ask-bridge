@@ -1,0 +1,6 @@
+mcp==2.0.0
+uvicorn==0.41.0
+httpx==0.28.1
+# mcp 2.0.0 types its Streamable HTTP transport against httpx2, so both are
+# required: httpx for general use, httpx2 for the client transport.
+httpx2==2.15.1
